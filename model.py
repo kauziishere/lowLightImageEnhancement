@@ -3,10 +3,15 @@ import pandas as pd
 import tensorflow as tf
 from keras.models import Input, Model
 from keras.layers import Dense, Dropout, Concatenate,Reshape, Conv2DTranspose,Conv2D, MaxPooling2D, LeakyReLU, UpSampling2D, Lambda
+import keras
+from preprocess import *
 
 def function_to_depth_to_space(x):
 	x = tf.depth_to_space(x, 2)
 	return x
+
+def function_to_remove_negs(x):
+	return tf.minimum(tf.maximum(x, 0), 1)
 
 def model(input_shape = (512, 512, 4)):
 	activation_fn = LeakyReLU(0.2)
@@ -39,28 +44,29 @@ def model(input_shape = (512, 512, 4)):
 	conv5 =  Conv2D(512, (3,3), name = "conv2d_10", padding = 'same')(conv5)
 	conv5 = LeakyReLU(0.2)(conv5)
 
-	up6 = UpSampling2D(size = (2, 2))(conv5)
+	#up6 = UpSampling2D(size = (2, 2))(conv5)
+	up6 = Conv2DTranspose(256, (3, 3), strides = (2, 2), padding = 'same')(conv5)
 	up6 = Concatenate(axis=3)([conv4, up6])
 	conv6 = Conv2D(256, (3, 3), name = "conv2d_11", padding = 'same')(up6)
 	conv6 = LeakyReLU(0.2)(conv6)
 	conv6 = Conv2D(256, (3, 3), name = "conv2d_12", padding = 'same')(conv6)
 	conv6 = LeakyReLU(0.2)(conv6)
 
-	up7 = UpSampling2D(size = (2, 2))(conv6)
+	up7 = Conv2DTranspose(128, (3, 3), strides = (2, 2), padding = 'same')(conv6)
 	up7 = Concatenate(axis=3)([conv3, up7])
 	conv7 = Conv2D(128, (3, 3), name = "conv2d_13", padding = 'same')(up7)
 	conv7 = LeakyReLU(0.2)(conv7)
 	conv7 = Conv2D(128, (3, 3), name = "conv2d_14", padding = 'same')(conv7)
 	conv7 = LeakyReLU(0.2)(conv7)
 
-	up8 = UpSampling2D(size = (2, 2))(conv7)
+	up8 = Conv2DTranspose(64, (3, 3), strides = (2, 2), padding = 'same')(conv7)
 	up8 = Concatenate(axis=3)([conv2, up8])
 	conv8 = Conv2D(64, (3, 3), name = "conv2d_15", padding = 'same')(up8)
 	conv8 = LeakyReLU(0.2)(conv8)
 	conv8 = Conv2D(64, (3, 3), name = "conv2d_16", padding = 'same')(conv8)
 	conv8 = LeakyReLU(0.2)(conv8)
 
-	up9 = UpSampling2D(size = (2, 2))(conv8)
+	up9 = Conv2DTranspose(32, (3, 3), strides = (2, 2), padding = 'same')(conv8)
 	up9 = Concatenate(axis=3)([conv1, up9])
 	conv9 = Conv2D(32, (3, 3), name = "conv2d_17", padding = 'same')(up9)
 	conv9 = LeakyReLU(0.2)(conv9)
@@ -70,9 +76,9 @@ def model(input_shape = (512, 512, 4)):
 	conv10 = Conv2D(12, (1, 1), name = "conv2d_19", padding = 'same')(conv9)
 	conv10 = LeakyReLU(0.2)(conv10)
 	convfin = Lambda(function_to_depth_to_space)(conv10)
-	model = Model(inputs = inpu, outputs = convfin)
+	convexp = Lambda(function_to_remove_negs)(convfin)
+	model = Model(inputs = inpu, outputs = convexp)
 	return model
 
 if __name__ == "__main__":
-	model((512, 512, 4))
-
+	net = model()

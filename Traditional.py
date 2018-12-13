@@ -55,10 +55,10 @@ def traditional_approach(filename):
     #plt.imshow(img_array)
     #plt.imshow(whiteb_result)
 
-    demosaic_result=demosaicing(whiteb_result,width,height)
+    denoise_sharpen_result = demosaicing(whiteb_result,width,height)
     #plt.imshow(demosaic_result)
 
-    denoise_sharpen_result=denoising_sharpening(demosaic_result)
+    #denoise_sharpen_result=denoising_sharpening(demosaic_result)
     #fig=plt.figure(figsize=(150,150))
     #fig.add_subplot(20,20,1)
     #plt.imshow(denoise_sharpen_result)
@@ -68,7 +68,7 @@ def traditional_approach(filename):
     #plt.imshow(gamma_correct)
     #plt.show()
     img = misc.toimage(gamma_correct, high=255, low=0, cmin=0, cmax=255)
-    img.save(filename.split('/')[3][:5]+'_trad.png')
+    img.save('./Outputs/'+filename.split('/')[3][:5]+'v1_trad.png')
 
 if __name__ == "__main__":
 	traditional_approach('./00001_00_0.1s.ARW')

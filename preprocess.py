@@ -8,15 +8,19 @@ from PIL import Image
 filepath="weights.{epoch:03d}.hdf5"
 np.random.seed(0)
 def pre_process(filename):
-	raw = rawpy.imread(filename)
-	image = raw.raw_image_visible.astype(np.float32)
+	try:
+		raw = rawpy.imread(filename)
+		image = raw.raw_image_visible.astype(np.float32)
+	except rawpy._rawpy.LibRawNonFatalError:
+		image = np.array(Image.open(filename))
+	#	print("Image size: {}".format(image.shape))
 	#image = raw.black_level_per_channel
 	image = np.maximum(image - 512, 0)/(16383 - 512)
 	image = np.expand_dims(image, axis = 2)
 	H = image.shape[0]
 	W = image.shape[1]
 	out = np.concatenate((image[0:H:2, 0:W:2, :], image[0:H:2, 1:W:2, :],image[1:H:2, 1:W:2, :],image[1:H:2, 0:W:2, :]), axis = 2)
-	out = np.expand_dims(out, axis = 0)*100.0
+	out = np.expand_dims(out, axis = 0)
 	return  out
 
 def create_files(train_images_file, test_images_file, val_images_file):
